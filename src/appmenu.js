@@ -2,6 +2,10 @@ const { app } = require('electron');
 
 export const appMenuTemplate = [
     {
+        label: 'Electron',
+        submenu: []
+    },
+    {
         label: 'File',
         submenu: []
     },
@@ -37,8 +41,8 @@ export const appMenuTemplate = [
         role: 'help',
         submenu: [
             {
-                label: 'Home Page',
-                click() { require('electron').shell.openExternal('https://github.com/yuxi114'); }
+                label: 'About',
+                click() { require('electron').shell.openExternal('https://electronjs.org/'); }
             }
         ]
     }

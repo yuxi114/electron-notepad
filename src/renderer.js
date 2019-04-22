@@ -53,7 +53,7 @@ ipcRenderer.on('action', (event, arg) => {
                 currentFile = files[0];
                 const txtRead = readText(currentFile);
                 txtEditor.value = txtRead;
-                document.title = "Notepad - " + currentFile;
+                document.title = "Notepad-" + currentFile;
                 isSaved = true;
             }
             break;
@@ -92,7 +92,7 @@ function saveCurrentDoc() {
         const txtSave = txtEditor.value;
         saveText(txtSave, currentFile);
         isSaved = true;
-        document.title = "Notepad - " + currentFile;
+        document.title = "Notepad-" + currentFile;
     }
 }
 
