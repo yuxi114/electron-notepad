@@ -1,5 +1,6 @@
 const { ipcRenderer, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
+const fs = require('fs');   // Node.js内置的fs模块是文件系统模块，负责读写文件
 
 let currentFile = null; //当前文档保存的路径
 let isSaved = true;     //当前文档是否已保存
@@ -26,7 +27,7 @@ txtEditor.addEventListener('contextmenu', e => {
 });
 
 //监控文本框内容是否改变
-txtEditor.oninput = (e) => {
+txtEditor.oninput = e => {
     if (isSaved) document.title += " *";
     isSaved = false;
 };
@@ -36,31 +37,16 @@ ipcRenderer.on('action', (event, arg) => {
     switch (arg) {
         case 'new': //新建文件
             askSaveIfNeed();
-            currentFile = null;
-            txtEditor.value = '';
-            document.title = "Notepad - Untitled";
-            isSaved = true;
+            newFile();
             break;
         case 'open': //打开文件
             askSaveIfNeed();
-            const files = remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
-                filters: [
-                    { name: "Text Files", extensions: ['txt', 'js', 'html', 'md'] },
-                    { name: 'All Files', extensions: ['*'] }],
-                properties: ['openFile']
-            });
-            if (files) {
-                currentFile = files[0];
-                const txtRead = readText(currentFile);
-                txtEditor.value = txtRead;
-                document.title = "Notepad-" + currentFile;
-                isSaved = true;
-            }
+            openDoc();
             break;
         case 'save': //保存文件
             saveCurrentDoc();
             break;
-        case 'exiting':
+        case 'exiting': // 结束
             askSaveIfNeed();
             ipcRenderer.sendSync('reqaction', 'exit');
             break;
@@ -69,13 +55,50 @@ ipcRenderer.on('action', (event, arg) => {
 
 //读取文本文件
 function readText(file) {
-    const fs = require('fs');
-    return fs.readFileSync(file, 'utf8');
+    let readFile = null;
+    try {
+        readFile = fs.readFileSync(file, 'utf8');
+    } catch (error) {
+        console.log(error, 'readFile');
+        return;
+    }
+    return readFile;
 }
 //保存文本内容到文件
 function saveText(text, file) {
-    const fs = require('fs');
-    fs.writeFileSync(file, text);
+    let writeFile = null;
+    try {
+        writeFile = fs.writeFileSync(file, text);
+    } catch (error) {
+        console.log(error, 'writeFile');
+        return;
+    }
+    return writeFile;
+}
+
+// 新建文件
+function newFile() {
+    currentFile = null;
+    txtEditor.value = '';
+    document.title = "Notepad - Untitled";
+    isSaved = true;
+}
+// 打开文档
+function openDoc() {
+    const files = remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
+        filters: [
+            { name: "Text Files", extensions: ['txt', 'js', 'html', 'md'] },
+            { name: 'All Files', extensions: ['*'] }
+        ],
+        properties: ['openFile']
+    });
+    if (files) {
+        currentFile = files[0];
+        const txtRead = readText(currentFile);
+        txtEditor.value = txtRead;
+        document.title = "Notepad - " + currentFile;
+        isSaved = true;
+    }
 }
 
 //保存当前文档
@@ -92,7 +115,7 @@ function saveCurrentDoc() {
         const txtSave = txtEditor.value;
         saveText(txtSave, currentFile);
         isSaved = true;
-        document.title = "Notepad-" + currentFile;
+        document.title = "Notepad - " + currentFile;
     }
 }
 
