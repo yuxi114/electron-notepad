@@ -1,5 +1,3 @@
-const { app } = require('electron');
-
 export const appMenuTemplate = [
     {
         label: 'Electron',
